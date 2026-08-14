@@ -2,6 +2,8 @@
 
 English | [中文](README.zh.md)
 
+> ⚡ Get an **OpenCode GO plan**: [buycodingplan.com](https://buycodingplan.com/)
+
 A [DSH](https://github.com/deepseek-ai/deepseek-harness) (DeepSeek Harness) plugin that watches your **OpenCode GO plan** quota — the $10/month subscription that gives you usage limits on open-source models (rolling 5-hour, weekly, and monthly windows).
 
 ## Features

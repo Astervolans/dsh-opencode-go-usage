@@ -2,6 +2,8 @@
 
 [English](README.md) | 中文
 
+> ⚡ **OpenCode GO 套餐**: [buycodingplan.com](https://buycodingplan.com/)
+
 [DSH](https://github.com/deepseek-ai/deepseek-harness)(DeepSeek Harness)插件:监控你的 **OpenCode GO 套餐**额度 —— 10 美元/月的订阅,按模型提供滚动 5 小时 / 每周 / 每月三个窗口的用量限额。
 
 ## 功能
