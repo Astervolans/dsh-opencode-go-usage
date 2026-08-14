@@ -1,6 +1,6 @@
 {
   "name": "dsh-opencode-go-usage",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "DSH (DeepSeek Harness) plugin: OpenCode GO plan quota widget in the sidebar, same-origin usage proxy, and a /opencode-go chat command",
   "type": "module",
   "main": "lib/index.js",
