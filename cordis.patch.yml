@@ -1,0 +1,12 @@
+# dsh-opencode-go-usage — profile bundle patch.
+#
+# `dsh plugin --profile web add dsh-opencode-go-usage` installs this package and,
+# because package.json declares `dsh.bundle.patch`, reconciles it into the
+# profile's `dsh.profile.bundles` layer stack automatically — no manual
+# cordis.patch.yml editing. This file is that bundle layer: it inserts the
+# plugin entry with schema defaults; user overrides live in the settings
+# namespace (Web Settings → Plugins → Plugin configuration) or in
+# `~/.dsh/settings.yaml` under `dsh-opencode-go-usage`.
+- insert:
+    - id: dsh-opencode-go-usage
+      name: dsh-opencode-go-usage
