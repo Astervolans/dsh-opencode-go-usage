@@ -6,6 +6,8 @@
 
 [DSH](https://github.com/deepseek-ai/deepseek-harness)(DeepSeek Harness)插件:监控你的 **OpenCode GO 套餐**额度 —— 10 美元/月的订阅,按模型提供滚动 5 小时 / 每周 / 每月三个窗口的用量限额。
 
+兼容 DSH `0.1.1-rc.2` 与 `0.1.2-alpha.2`。
+
 ## 功能
 
 - **侧边栏小组件**:常驻 DSH Web 侧边栏底部(`sidebar.footer.action` 槽位),三条用量进度条:滚动窗口(5h)、周窗口、月窗口,每条带重置倒计时;侧边栏收起时收缩为紧凑的百分比徽标。
@@ -19,7 +21,7 @@
 | 端 | 文件 | 职责 |
 |---|---|---|
 | host(Node) | `lib/index.js` | 注册 `/opencode-go/usage` Web 路由(`ctx.webServer`)与 `/opencode-go` 命令(`ctx.commands`);通过 DSH credentials 解析 key;上游调用带 30s 缓存 |
-| 浏览器 | `lib/client.js` | 手写的 `window.__ModuleLoader__.load({ id, factory })` bundle,注册进 `sidebar.footer.action` 列表槽,每 60s 轮询同源路由 |
+| 浏览器 | `lib/client.js` | 手写的 `window.__ModuleLoader__.load({ id, factory })` bundle，等待 `sidebar.footer.action` 列表槽就绪后注册，每 60s 轮询同源路由 |
 
 `package.json` 声明了 `"dsh": { "client": { "platform": "web" } }`,DSH 的 client-modules 节点端会把它扫描进浏览器启动图(`window.__DSH_BOOT__`),并在 `/plugins/dsh-opencode-go-usage/client.js` 提供该 bundle。
 

@@ -6,6 +6,8 @@ English | [中文](README.zh.md)
 
 A [DSH](https://github.com/deepseek-ai/deepseek-harness) (DeepSeek Harness) plugin that watches your **OpenCode GO plan** quota — the $10/month subscription that gives you usage limits on open-source models (rolling 5-hour, weekly, and monthly windows).
 
+Compatible with DSH `0.1.1-rc.2` and `0.1.2-alpha.2`.
+
 ## Features
 
 - **Sidebar widget** — a live widget pinned at the bottom of the DSH web sidebar (`sidebar.footer.action` slot) showing three usage bars: rolling (5h), weekly, and monthly, each with a relative countdown to its window reset. When the sidebar is collapsed it shrinks to a compact percentage badge.
@@ -19,7 +21,7 @@ The plugin is a **dual-half DSH package**:
 | half | file | role |
 |---|---|---|
 | host (Node) | `lib/index.js` | registers the `/opencode-go/usage` web route (`ctx.webServer`) and the `/opencode-go` command (`ctx.commands`); resolves the key through DSH credentials; caches the upstream call (30 s) |
-| browser | `lib/client.js` | a hand-authored `window.__ModuleLoader__.load({ id, factory })` bundle that registers into the `sidebar.footer.action` list slot and polls the same-origin route every 60 s |
+| browser | `lib/client.js` | a hand-authored `window.__ModuleLoader__.load({ id, factory })` bundle that waits for and registers into the `sidebar.footer.action` list slot, then polls the same-origin route every 60 s |
 
 `package.json` declares `"dsh": { "client": { "platform": "web" } }`, so DSH's client-modules node half scans it into the browser boot graph (`window.__DSH_BOOT__`) and serves the bundle at `/plugins/dsh-opencode-go-usage/client.js`.
 
