@@ -13,6 +13,19 @@
 - **侧边栏小组件**:常驻 DSH Web 侧边栏底部(`sidebar.footer.action` 槽位),三条用量进度条:滚动窗口(5h)、周窗口、月窗口,每条带重置倒计时;侧边栏收起时收缩为紧凑的百分比徽标。
 - **`/opencode-go` 聊天命令**:在对话中以文本输出同样的三个窗口数字。
 - **同源代理**:host 端注册 `GET /opencode-go/usage`,携带你的 API key 转发到官方 GO 网关。key 永不进入浏览器,也没有 CORS 问题。
+- **`x-opencode-session` 修复**:运行时自动为 OpenCode GO 网关的聊天请求注入真实会话 ID(网关对缺失该头的请求返回 400)。不修改 DSH 安装文件,升级不失效。
+
+## `x-opencode-session` 修复
+
+OpenCode GO 网关拒绝缺少 `x-opencode-session` 头的聊天补全请求(`HTTP 400 MissingSessionID`),而 DSH 的 `llm-pi-ai` 适配器从不发送该头。与其修改 DSH 安装目录里的文件(每次 DSH 升级都会被覆盖),本插件改为运行时注入:
+
+- 一次性包装 `globalThis.fetch`;
+- 监听 DSH 官方 `llm/stream` waterfall 事件,获取每次调用的会话 ID(`options.sessionId`,由 `dsh-agent-loop` 填充)。
+
+网关 base 从**被调用 provider 自身的设置**解析(`llm-pi-ai.providers.<route>.baseURL`,缺省回退到本插件的 `baseUrl`)——代码中不硬编码任何域名——因此只有发往该调用对应网关的请求才会收到该头,且值为真实的会话级 ID。
+
+- 开关:设置命名空间中的 `injectSessionHeader`(默认 `true`)。
+- 可观测性:`GET /opencode-go/usage` 返回 `sessionHeader: { active, count, diag }`;`diag` 报告运行时观测,如 `streamSeen`(处理过的 `llm/stream` 调用数)、`lastStream`(provider、session-id 是否存在、base 及其来源)、`requests`/`injected`/`missed`(带上下文的 wire 请求数 / 实际注入数 / 因 URL 不匹配未注入数)。
 
 ## 工作原理
 

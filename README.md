@@ -13,6 +13,19 @@ Compatible with DSH `0.1.1-rc.2` and `0.1.2-alpha.2`.
 - **Sidebar widget** — a live widget pinned at the bottom of the DSH web sidebar (`sidebar.footer.action` slot) showing three usage bars: rolling (5h), weekly, and monthly, each with a relative countdown to its window reset. When the sidebar is collapsed it shrinks to a compact percentage badge.
 - **`/opencode-go` chat command** — prints the same numbers as text inside any conversation.
 - **Same-origin proxy** — the host registers `GET /opencode-go/usage`, forwards to the official GO gateway with your API key. The key never reaches the browser and no CORS is involved.
+- **`x-opencode-session` fix** — at runtime, injects the real harness session id into OpenCode GO gateway chat requests (the gateway 400s requests without it). No DSH file patching; survives upgrades.
+
+## The `x-opencode-session` fix
+
+The GO gateway rejects chat-completion requests that lack the `x-opencode-session` header (`HTTP 400 MissingSessionID`), and DSH's `llm-pi-ai` adapter never sends it. Instead of patching DSH's installed files (which every DSH upgrade overwrites), this plugin:
+
+- wraps `globalThis.fetch` once, and
+- listens to DSH's official `llm/stream` waterfall event to capture the per-call harness session id (`options.sessionId`, filled by `dsh-agent-loop`).
+
+The gateway base is resolved from the **called provider's own settings** (`llm-pi-ai.providers.<route>.baseURL`, falling back to this plugin's `baseUrl`) — no host names are hard-coded — so only requests to that call's gateway receive the header, with the real per-conversation session id.
+
+- Toggle: `injectSessionHeader` in the settings namespace (default `true`).
+- Observability: `GET /opencode-go/usage` returns `sessionHeader: { active, count, diag }`; `diag` reports what the runtime saw, e.g. `streamSeen` (handled `llm/stream` calls), `lastStream` (provider, session-id presence, base and its source), `requests`/`injected`/`missed` (wire fetches that carried the context, got the header, or fell through on a URL mismatch).
 
 ## How it works
 
