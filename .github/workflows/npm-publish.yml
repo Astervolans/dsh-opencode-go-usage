@@ -10,6 +10,9 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      # OIDC: lets npm verify that this exact workflow is allowed to publish,
+      # so no long-lived token (and no token rotation) is needed.
+      id-token: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -17,7 +20,9 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          # Trusted publishing needs npm >= 11.5.1. Node 20 ships npm 10, which
+          # fails with "Access token expired or revoked" — so pin Node 24.
+          node-version: 24
           registry-url: https://registry.npmjs.org
 
       - name: Verify tag matches package.json version
@@ -31,6 +36,24 @@ jobs:
           echo "Releasing $PKG_VERSION"
 
       - name: Publish to npm
-        run: npm publish
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        # No NODE_AUTH_TOKEN: npm exchanges the OIDC id-token for short-lived
+        # credentials, and attaches a provenance attestation automatically.
+        run: |
+          set -euo pipefail
+          PKG="$(node -p "require('./package.json').name")"
+          VER="$(node -p "require('./package.json').version")"
+
+          # 1.1.0..1.3.0 were published by hand before trusted publishing could
+          # be configured, so re-pushing one of those tags must be a no-op
+          # rather than a failed run. Distinguish "not published yet" (404 ->
+          # proceed) from a real registry problem (anything else -> fail loudly).
+          if LOOKUP="$(npm view "$PKG@$VER" version 2>&1)"; then
+            echo "::notice::$PKG@$VER is already on npm - nothing to publish."
+            exit 0
+          fi
+          case "$LOOKUP" in
+            *E404*|*"Not Found"*) ;;
+            *) echo "$LOOKUP" >&2; exit 1 ;;
+          esac
+
+          npm publish --provenance --access public

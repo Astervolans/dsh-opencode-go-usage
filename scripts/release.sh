@@ -1,16 +1,16 @@
 #!/usr/bin/env bash
-# Release helper: bump version, commit, tag, push — GitHub Actions then
-# publishes to npm automatically (see .github/workflows/npm-publish.yml).
+# Release helper: bump version, commit, tag, push. GitHub Actions then
+# publishes to npm via trusted publishing (OIDC) — no token or secret involved.
+# See docs/RELEASE.md for the one-time setup.
 #
 # Usage:
-#   ./scripts/release.sh          # patch: 1.1.0 -> 1.1.1
-#   ./scripts/release.sh minor    # minor: 1.1.0 -> 1.2.0
-#   ./scripts/release.sh major    # major: 1.1.0 -> 2.0.0
+#   ./scripts/release.sh          # patch: 1.3.0 -> 1.3.1
+#   ./scripts/release.sh minor    # minor: 1.3.0 -> 1.4.0
+#   ./scripts/release.sh major    # major: 1.3.0 -> 2.0.0
 #
 # Prerequisites:
 #   - repo has an `origin` remote (https, with GitHub auth configured)
-#   - GitHub repo has an `NPM_TOKEN` secret (npm automation token, publish
-#     scope — automation tokens skip the 2FA one-time code)
+#   - npm trusted publisher configured for this repo (see docs/RELEASE.md)
 set -euo pipefail
 
 LEVEL="${1:-patch}"
