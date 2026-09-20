@@ -7,9 +7,10 @@ English | [中文](README.zh.md)
 > **This is a fork of [yumusb/dsh-opencode-go-usage](https://github.com/yumusb/dsh-opencode-go-usage)**
 > ([Astervolans/dsh-opencode-go-usage](https://github.com/Astervolans/dsh-opencode-go-usage)),
 > published as the scoped package `@astervolans/dsh-opencode-go-usage`. The difference from
-> upstream: **a time bar under each usage bar** (see Features). The plugin's runtime identity is
-> still `dsh-opencode-go-usage` (settings namespace, routes and command name are unchanged), so
-> migrating from upstream needs no configuration changes.
+> upstream: **a time bar under each usage bar** (see Features). The settings namespace, HTTP
+> routes and command name are still `dsh-opencode-go-usage` (unchanged), so migrating from
+> upstream needs no configuration changes; only the `dsh.bundle.patch` entry's `name` must be the
+> resolvable scoped package name, or `dsh web` aborts at startup with `Cannot find package`.
 
 A [DSH](https://github.com/deepseek-ai/deepseek-harness) (DeepSeek Harness) plugin that watches your **OpenCode GO plan** quota — the $10/month subscription that gives you usage limits on open-source models (rolling 5-hour, weekly, and monthly windows).
 
@@ -18,7 +19,7 @@ Compatible with DSH `0.1.1-rc.2` and `0.1.2-alpha.2`.
 ## Features
 
 - **Sidebar widget** — a live widget pinned at the bottom of the DSH web sidebar (`sidebar.footer.action` slot) showing three usage bars: rolling (5h), weekly, and monthly, each with a relative countdown to its window reset. When the sidebar is collapsed it shrinks to a compact percentage badge.
-- **Time bars** — under each usage bar sits a time bar splitting the window into two: **gray on the left is time already elapsed** (growing rightward) and **blue on the right is time remaining** (shrinking leftward); at reset the gray fills up and starts over. The time bar matches the usage bar exactly in height and radius (5 px / 3 px) and differs only in color and direction; both segments are rounded on all four corners, so the outer ends *and* the junction where they meet are rounded. The gray reuses the quota bar's track token (`--dsw-alias-border-l2`), so both stacked grays are the same shade. Reading quota used against time elapsed shows at a glance whether you are burning quota faster or slower than the clock. Hover for the elapsed/remaining percentages.
+- **Time bars** — under each usage bar sits a time bar splitting the window into two: **gray on the left is time already elapsed** (growing rightward) and **blue on the right is time remaining** (shrinking leftward); at reset the gray fills up and starts over. The time bar matches the usage bar exactly in height and radius (5 px / 3 px) and differs only in color and direction; both segments are rounded on all four corners, so the outer ends *and* the junction where they meet are rounded. The gray reuses the quota bar's track token (`--dsw-alias-border-l2`), so both stacked grays are the same shade; the blue segment uses `--dsw-static-deepseek-450` (`#5686fe`). Reading quota used against time elapsed shows at a glance whether you are burning quota faster or slower than the clock. Hover for the elapsed/remaining percentages.
 - **`/opencode-go` chat command** — prints the same numbers as text inside any conversation.
 - **Same-origin proxy** — the host registers `GET /opencode-go/usage`, forwards to the official GO gateway with your API key. The key never reaches the browser and no CORS is involved.
 - **`x-opencode-session` fix** — at runtime, injects the real harness session id into OpenCode GO gateway chat requests (the gateway 400s requests without it). No DSH file patching; survives upgrades.

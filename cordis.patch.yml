@@ -8,9 +8,14 @@
 # namespace (Web Settings → Plugins → Plugin configuration) or in
 # `~/.dsh/settings.yaml` under `dsh-opencode-go-usage`.
 #
-# The entry id/name below are the RUNTIME plugin id, deliberately kept as the
-# unscoped `dsh-opencode-go-usage` so existing settings and routes keep working
-# after the npm scope rename.
+# `name` MUST be the package's resolvable module specifier: the cordis loader
+# imports exactly this string from the profile directory, where only the scoped
+# package exists. Before the npm rename this file said the unscoped
+# `dsh-opencode-go-usage`, which made `dsh web` abort at startup with
+# `Cannot find package 'dsh-opencode-go-usage' imported from <profile>`.
+# The `id` stays the unscoped runtime id so the settings namespace
+# (`dsh-opencode-go-usage`), the HTTP routes and the /opencode-go command name
+# keep working after the rename.
 - insert:
     - id: dsh-opencode-go-usage
-      name: dsh-opencode-go-usage
+      name: "@astervolans/dsh-opencode-go-usage"

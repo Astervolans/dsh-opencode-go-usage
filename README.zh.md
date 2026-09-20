@@ -7,7 +7,8 @@
 > **这是 [yumusb/dsh-opencode-go-usage](https://github.com/yumusb/dsh-opencode-go-usage) 的 fork**
 > ([Astervolans/dsh-opencode-go-usage](https://github.com/Astervolans/dsh-opencode-go-usage)),
 > 发布为 scoped 包 `@astervolans/dsh-opencode-go-usage`。相对上游的差异:**每条用量进度条下方新增一条时间进度条**(见「功能」)。
-> 插件的运行时标识仍是 `dsh-opencode-go-usage`(设置项、路由、命令名都不变),所以从上游迁移过来无需改动配置。
+> 插件的设置命名空间、HTTP 路由与命令名仍是 `dsh-opencode-go-usage`(不变),所以从上游迁移过来无需改动配置;
+> 仅 `dsh.bundle.patch` 的 `name` 必须是可解析的包名(scoped),否则 `dsh web` 会在启动时报 `Cannot find package`。
 
 [DSH](https://github.com/deepseek-ai/deepseek-harness)(DeepSeek Harness)插件:监控你的 **OpenCode GO 套餐**额度 —— 10 美元/月的订阅,按模型提供滚动 5 小时 / 每周 / 每月三个窗口的用量限额。
 
@@ -16,7 +17,7 @@
 ## 功能
 
 - **侧边栏小组件**:常驻 DSH Web 侧边栏底部(`sidebar.footer.action` 槽位),三条用量进度条:滚动窗口(5h)、周窗口、月窗口,每条带重置倒计时;侧边栏收起时收缩为紧凑的百分比徽标。
-- **时间进度条**:每条用量条下方还有一条时间条,把本窗口的时间轴一分为二——**左侧灰色是已流逝时间**(随时间向右增长),**右侧蓝色是剩余时间**(随时间向左收缩),窗口重置时灰色占满并归零。时间条与用量条**同高同圆角**(5px / 3px),仅颜色与方向不同;灰段与蓝段各自四角圆角,外侧两端与两段相接处都是圆角。灰段与上方用量条的轨道灰使用同一个主题 token(`--dsw-alias-border-l2`),两条灰上下同色。用量条(消耗了多少额度)与时间条(过去了多少时间)上下对照,可直接看出额度消耗快于还是慢于时间流逝。悬停显示已流逝/剩余时间百分比。
+- **时间进度条**:每条用量条下方还有一条时间条,把本窗口的时间轴一分为二——**左侧灰色是已流逝时间**(随时间向右增长),**右侧蓝色是剩余时间**(随时间向左收缩),窗口重置时灰色占满并归零。时间条与用量条**同高同圆角**(5px / 3px),仅颜色与方向不同;灰段与蓝段各自四角圆角,外侧两端与两段相接处都是圆角。灰段与上方用量条的轨道灰使用同一个主题 token(`--dsw-alias-border-l2`),两条灰上下同色;蓝段用 `--dsw-static-deepseek-450`(`#5686fe`)。用量条(消耗了多少额度)与时间条(过去了多少时间)上下对照,可直接看出额度消耗快于还是慢于时间流逝。悬停显示已流逝/剩余时间百分比。
 - **`/opencode-go` 聊天命令**:在对话中以文本输出同样的三个窗口数字。
 - **同源代理**:host 端注册 `GET /opencode-go/usage`,携带你的 API key 转发到官方 GO 网关。key 永不进入浏览器,也没有 CORS 问题。
 - **`x-opencode-session` 修复**:运行时自动为 OpenCode GO 网关的聊天请求注入真实会话 ID(网关对缺失该头的请求返回 400)。不修改 DSH 安装文件,升级不失效。
