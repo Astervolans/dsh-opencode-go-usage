@@ -1,4 +1,4 @@
-# @asterdolans/dsh-opencode-go-usage
+# @astervolans/dsh-opencode-go-usage
 
 [English](README.md) | 中文
 
@@ -6,7 +6,7 @@
 
 > **这是 [yumusb/dsh-opencode-go-usage](https://github.com/yumusb/dsh-opencode-go-usage) 的 fork**
 > ([Astervolans/dsh-opencode-go-usage](https://github.com/Astervolans/dsh-opencode-go-usage)),
-> 发布为 scoped 包 `@asterdolans/dsh-opencode-go-usage`。相对上游的差异:**每条用量进度条下方新增一条时间进度条**(见「功能」)。
+> 发布为 scoped 包 `@astervolans/dsh-opencode-go-usage`。相对上游的差异:**每条用量进度条下方新增一条时间进度条**(见「功能」)。
 > 插件的运行时标识仍是 `dsh-opencode-go-usage`(设置项、路由、命令名都不变),所以从上游迁移过来无需改动配置。
 
 [DSH](https://github.com/deepseek-ai/deepseek-harness)(DeepSeek Harness)插件:监控你的 **OpenCode GO 套餐**额度 —— 10 美元/月的订阅,按模型提供滚动 5 小时 / 每周 / 每月三个窗口的用量限额。
@@ -64,7 +64,7 @@ profile 里的第三方包通常拿不到浏览器端——本插件通过**自�
 
 ```bash
 # 1. 安装到 web profile(依赖 pnpm,没有的话先 corepack enable)
-dsh plugin --profile web add @asterdolans/dsh-opencode-go-usage
+dsh plugin --profile web add @astervolans/dsh-opencode-go-usage
 
 # 2. 把 GO API key 存为 DSH credential
 #    (key 在 https://opencode.ai/auth 创建)

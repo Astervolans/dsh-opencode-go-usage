@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# 发布 @asterdolans/dsh-opencode-go-usage 到 npm。
+# 发布 @astervolans/dsh-opencode-go-usage 到 npm。
 #
 # 为什么是手动发布：上游走 npm Trusted Publishing(OIDC)，但该授权按仓库绑定
 # (yumusb/dsh-opencode-go-usage + npm-publish.yml)，fork 不在授权列表内。
@@ -11,7 +11,7 @@
 #
 # 前置:
 #   - 已 `npm login`（发布需要 2FA，必须在本机终端交互完成）
-#   - npm scope `@asterdolans` 已创建（见 docs/RELEASE.md）
+#   - npm scope `@astervolans` 已创建（见 docs/RELEASE.md）
 set -euo pipefail
 
 cd "$(dirname "$0")/.."

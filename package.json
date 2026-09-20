@@ -1,5 +1,5 @@
 {
-  "name": "@asterdolans/dsh-opencode-go-usage",
+  "name": "@astervolans/dsh-opencode-go-usage",
   "version": "1.3.2",
   "description": "DSH (DeepSeek Harness) plugin: OpenCode GO plan quota widget in the sidebar, same-origin usage proxy, and a /opencode-go chat command",
   "type": "module",

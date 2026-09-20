@@ -1,4 +1,4 @@
-# @asterdolans/dsh-opencode-go-usage
+# @astervolans/dsh-opencode-go-usage
 
 English | [中文](README.zh.md)
 
@@ -6,7 +6,7 @@ English | [中文](README.zh.md)
 
 > **This is a fork of [yumusb/dsh-opencode-go-usage](https://github.com/yumusb/dsh-opencode-go-usage)**
 > ([Astervolans/dsh-opencode-go-usage](https://github.com/Astervolans/dsh-opencode-go-usage)),
-> published as the scoped package `@asterdolans/dsh-opencode-go-usage`. The difference from
+> published as the scoped package `@astervolans/dsh-opencode-go-usage`. The difference from
 > upstream: **a time bar under each usage bar** (see Features). The plugin's runtime identity is
 > still `dsh-opencode-go-usage` (settings namespace, routes and command name are unchanged), so
 > migrating from upstream needs no configuration changes.
@@ -70,7 +70,7 @@ an OpenCode GO subscription.
 
 ```bash
 # 1. install the package into your web profile (pnpm; enable via corepack if needed)
-dsh plugin --profile web add @asterdolans/dsh-opencode-go-usage
+dsh plugin --profile web add @astervolans/dsh-opencode-go-usage
 
 # 2. store your GO API key as a DSH credential
 #    (create the key at https://opencode.ai/auth)

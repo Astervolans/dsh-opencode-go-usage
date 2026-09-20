@@ -1,7 +1,7 @@
 # 发布流程（维护者）
 
 > 本文档针对 **fork `Astervolans/dsh-opencode-go-usage`**，发布到 scoped 包名
-> **`@asterdolans/dsh-opencode-go-usage`**。
+> **`@astervolans/dsh-opencode-go-usage`**。
 >
 > 上游 `yumusb/dsh-opencode-go-usage` 发布的是无 scope 的 `dsh-opencode-go-usage`，
 > 该包名不属于本 fork，本 fork **无法**也**不应**向其发布。
@@ -17,12 +17,21 @@
 
 ## 一次性配置
 
-以你的 npm 账号创建 scope `@asterdolans`（免费，公开包）：
+scope `@astervolans` **已存在**（`https://www.npmjs.com/org/astervolans`），
+包名 `@astervolans/dsh-opencode-go-usage` 尚未占用，因此无需新建组织。
 
-1. 登录 <https://www.npmjs.com/>；
-2. 右上头像 → **Add Organization**；
-3. Name 填 `asterdolans`，Plan 选 **Free / Unlimited public packages**；
-4. 创建后确认 `https://www.npmjs.com/org/asterdolans` 可访问。
+核对方式：
+
+```bash
+# scope 是否存在
+curl -s -o /dev/null -w '%{http_code}\n' https://registry.npmjs.org/-/org/astervolans/user
+
+# 包名是否仍可用（尚未发布时应为 404）
+curl -s -o /dev/null -w '%{http_code}\n' 'https://registry.npmjs.org/@astervolans%2Fdsh-opencode-go-usage'
+```
+
+若 scope 不存在，去 <https://www.npmjs.com/> → 头像 → **Add Organization**，
+Name 填 `astervolans`，Plan 选 **Free / Unlimited public packages**。
 
 `package.json` 已声明 `"publishConfig": { "access": "public" }`，所以 scoped 包会以公开
 方式发布，不需要每次加 `--access public`。
@@ -57,7 +66,7 @@ npm publish           # publishConfig.access=public 已在 package.json 声明
 git push origin main
 git tag vX.Y.Z && git push origin vX.Y.Z
 
-curl -s https://registry.npmjs.org/@asterdolans%2Fdsh-opencode-go-usage/latest | head -c 300
+curl -s https://registry.npmjs.org/@astervolans%2Fdsh-opencode-go-usage/latest | head -c 300
 ```
 
 发布前自检：
@@ -88,4 +97,4 @@ git cherry-pick <sha>                                          # 按需挑选
 ```
 
 cherry-pick 上游提交时注意：上游的 `package.json` 是**无 scope 包名**，冲突时应保留
-本 fork 的 `@asterdolans/...`。
+本 fork 的 `@astervolans/...`。

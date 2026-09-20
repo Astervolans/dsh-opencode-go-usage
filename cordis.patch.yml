@@ -1,6 +1,6 @@
 # dsh-opencode-go-usage — profile bundle patch.
 #
-# `dsh plugin --profile web add @asterdolans/dsh-opencode-go-usage` installs this
+# `dsh plugin --profile web add @astervolans/dsh-opencode-go-usage` installs this
 # package and, because package.json declares `dsh.bundle.patch`, reconciles it
 # into the profile's `dsh.profile.bundles` layer stack automatically — no manual
 # cordis.patch.yml editing. This file is that bundle layer: it inserts the
