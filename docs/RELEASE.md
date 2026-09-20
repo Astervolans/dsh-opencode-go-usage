@@ -29,24 +29,34 @@
 
 ## 日常发版
 
+一键（推荐）：
+
 ```bash
-# 0. 登录（浏览器授权 + 2FA）。~/.npmrc 里的旧 token 是已吊销的 classic token，
-#    npm whoami 返回 401 就说明它已经死了，必须重新登录。
+npm login                     # 首次或凭据过期时。~/.npmrc 里的旧 token 是已吊销的
+                              # classic token，npm whoami 返回 401 即需重新登录
+./scripts/publish.sh          # 用当前版本发布
+./scripts/publish.sh patch    # 或先升版本（minor / major 同理）再发布
+```
+
+`scripts/publish.sh` 会依次做：校验已登录 → 可选升版本并提交 →
+**校验 `lib/index.js` 的 `NPM_PACKAGE` 与 `package.json` 的 `name` 一致**
+（这条最关键，写错会导致更新检查永远查不到新版本）→ 三个 lib 文件语法自检 →
+打印打包清单 → `npm publish`。
+
+手动等价步骤：
+
+```bash
 npm login
 npm whoami            # 应打印你的用户名
 
-# 1. 升版本号（提交 + 打 tag，不推送到上游）
 npm version patch --no-git-tag-version     # 或 minor / major
 git add package.json && git commit -m "chore: release vX.Y.Z"
 
-# 2. 发布
-npm publish
+npm publish           # publishConfig.access=public 已在 package.json 声明
 
-# 3. 推送代码与 tag（tag 不会触发发布——fork 没有 OIDC 授权）
 git push origin main
 git tag vX.Y.Z && git push origin vX.Y.Z
 
-# 4. 核对
 curl -s https://registry.npmjs.org/@asterdolans%2Fdsh-opencode-go-usage/latest | head -c 300
 ```
 
@@ -56,7 +66,7 @@ curl -s https://registry.npmjs.org/@asterdolans%2Fdsh-opencode-go-usage/latest |
   registry，写错会永远查不到新版本）；
 - `package.json` 的 `files` 决定打包内容（当前为 `lib` + `cordis.patch.yml`），
   改了目录结构要同步；
-- 装包验证：`npm pack --dry-run` 看清单。
+- `npm pack --dry-run` 看清单（当前 8 个文件 / 约 21 kB）。
 
 ## 为什么不用 NPM_TOKEN
 
