@@ -1,5 +1,10 @@
 name: Publish to npm
 
+# NOTE (fork): this workflow is inherited from upstream yumusb/dsh-opencode-go-usage,
+# where npm Trusted Publishing (OIDC) is bound to THAT repository only. A fork is not
+# in the trusted-publisher allow-list, so pushing a `v*` tag here would just produce a
+# failing run. This fork publishes manually instead — see docs/RELEASE.md — and the
+# guard below keeps the workflow a no-op outside the upstream repository.
 on:
   push:
     tags:
@@ -7,6 +12,8 @@ on:
 
 jobs:
   publish:
+    # No-op outside the upstream repository (see the note above).
+    if: github.repository == 'yumusb/dsh-opencode-go-usage'
     runs-on: ubuntu-latest
     permissions:
       contents: read

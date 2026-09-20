@@ -1,4 +1,4 @@
-# dsh-opencode-go-usage 使用者指南
+# @asterdolans/dsh-opencode-go-usage 使用者指南
 
 给"想用这个插件的人"看的傻瓜式安装步骤。全程不需要写代码。
 
@@ -17,7 +17,7 @@
 在终端执行:
 
 ```bash
-dsh plugin --profile web add dsh-opencode-go-usage
+dsh plugin --profile web add @asterdolans/dsh-opencode-go-usage
 ```
 
 > - 如果提示 `pnpm not found`,先执行 `corepack enable` 启用 pnpm 再试
