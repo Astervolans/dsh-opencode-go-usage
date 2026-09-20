@@ -11,6 +11,7 @@ Compatible with DSH `0.1.1-rc.2` and `0.1.2-alpha.2`.
 ## Features
 
 - **Sidebar widget** — a live widget pinned at the bottom of the DSH web sidebar (`sidebar.footer.action` slot) showing three usage bars: rolling (5h), weekly, and monthly, each with a relative countdown to its window reset. When the sidebar is collapsed it shrinks to a compact percentage badge.
+- **Time bars** — under each usage bar sits a time bar splitting the window into two: **gray on the left is time already elapsed** (growing rightward) and **blue on the right is time remaining** (shrinking leftward); at reset the gray fills up and starts over. The gray reuses the quota bar's track token (`--dsw-alias-border-l2`), so both stacked grays are the same shade. Reading quota used against time elapsed shows at a glance whether you are burning quota faster or slower than the clock. Hover for the elapsed/remaining percentages.
 - **`/opencode-go` chat command** — prints the same numbers as text inside any conversation.
 - **Same-origin proxy** — the host registers `GET /opencode-go/usage`, forwards to the official GO gateway with your API key. The key never reaches the browser and no CORS is involved.
 - **`x-opencode-session` fix** — at runtime, injects the real harness session id into OpenCode GO gateway chat requests (the gateway 400s requests without it). No DSH file patching; survives upgrades.
