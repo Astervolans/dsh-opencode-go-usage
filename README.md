@@ -14,7 +14,9 @@ English | [中文](README.zh.md)
 
 A [DSH](https://github.com/deepseek-ai/deepseek-harness) (DeepSeek Harness) plugin that watches your **OpenCode GO plan** quota — the $10/month subscription that gives you usage limits on open-source models (rolling 5-hour, weekly, and monthly windows).
 
-Compatible with DSH `0.1.1-rc.2` and `0.1.2-alpha.2`.
+Compatible with DSH `0.1.7-rc.1` and `0.1.7-rc.2` — declared in `peerDependencies`, so
+DSH enforces it. See [Compatibility](#compatibility) for the version matrix, what
+changed in 1.4.0, and what to do on any other runtime.
 
 ## Features
 
@@ -31,9 +33,9 @@ The GO gateway rejects chat-completion requests that lack the `x-opencode-sessio
 - wraps `globalThis.fetch` once, and
 - listens to DSH's official `llm/stream` waterfall event to capture the per-call harness session id (`options.sessionId`, filled by `dsh-agent-loop`).
 
-The gateway base is resolved from the **called provider's own settings** (`llm-pi-ai.providers.<route>.baseURL`, falling back to this plugin's `baseUrl`) — no host names are hard-coded — so only requests to that call's gateway receive the header, with the real per-conversation session id.
+The gateway base is resolved from the **called provider's own live config** (`llm-pi-ai.providers.<route>.baseURL`, falling back to this plugin's `baseUrl`) — no host names are hard-coded — so only requests to that call's gateway receive the header, with the real per-conversation session id.
 
-- Toggle: `injectSessionHeader` in the settings namespace (default `true`).
+- Toggle: `injectSessionHeader` in the plugin config (default `true`).
 - Observability: `GET /opencode-go/usage` returns `sessionHeader: { active, count, diag }`; `diag` reports what the runtime saw, e.g. `streamSeen` (handled `llm/stream` calls), `lastStream` (provider, session-id presence, base and its source), `requests`/`injected`/`missed` (wire fetches that carried the context, got the header, or fell through on a URL mismatch).
 
 ## How it works
@@ -45,29 +47,64 @@ The plugin is a **dual-half DSH package**:
 | host (Node) | `lib/index.js` | registers the `/opencode-go/usage` web route (`ctx.webServer`) and the `/opencode-go` command (`ctx.commands`); resolves the key through DSH credentials; caches the upstream call (30 s) |
 | browser | `lib/client.js` | a hand-authored `window.__ModuleLoader__.load({ id, factory })` bundle that waits for and registers into the `sidebar.footer.action` list slot, then polls the same-origin route every 60 s |
 
-`package.json` declares `"dsh": { "client": { "platform": "web" } }`, so DSH's client-modules node half scans it into the browser boot graph (`window.__DSH_BOOT__`) and serves the bundle at `/plugins/dsh-opencode-go-usage/client.js`.
+### How the sidebar widget loads
 
-### How the sidebar widget loads under the official install
+DSH `0.1.7-rc` composes the widget through the official client-modules scan: the
+package's `dsh.client` declaration + `exports["./client"]` are picked up per
+loader entry, the bundle is served from the `/plugins/...` combo routes, and
+its boot-graph row lands in the `window.__DSH_BOOT__` manifest by the host
+itself — no manual bundling or index injection. (The `0.1.1`/`0.1.2` line used a
+self-hosted `/dsh-opencode-go-usage/client.js` route + `webServer.tapIndex` row
+injection; that was removed because `0.1.7-rc` replaced the array-shaped boot
+manifest with a `{ rev, entries, batches }` object that must come from
+client-modules only.)
 
-`dsh plugin add` installs the package into the profile, which satisfies the host
-half (routes, command, settings). DSH's client-modules scanner can only resolve
-browser bundles from its own installation directory, so a profile-installed
-third-party package would normally lose its browser half — this plugin avoids
-that by **self-hosting** its bundle: the host registers the
-`/dsh-opencode-go-usage/client.js` route and injects its boot-graph row through the
-official `webServer.tapIndex` API. The sidebar widget therefore works from any
-installation location.
+## Compatibility
+
+| plugin | DSH runtime | host half | browser half |
+|---|---|---|---|
+| **1.4.0** (current) | `0.1.7-rc.1`, `0.1.7-rc.2` | `Config` schema read by the loader; config taken from the plugin entry (no `ctx.settings.register`/`settings.get`) | composed by `client-modules` from the package's `dsh.client` declaration |
+| 1.3.3 | `0.1.1-rc.2`, `0.1.2-alpha.2` (the pre-`0.1.7` line) | `ctx.settings.register` namespace + `ctx.settings.get` reads | self-hosted bundle route + `webServer.tapIndex` boot-graph row |
+
+The supported runtimes are declared in `peerDependencies`:
+
+```json
+"peerDependencies": { "@deepseek-ai/dsh": "0.1.7-rc.1 || 0.1.7-rc.2" }
+```
+
+DSH validates that range against the running runtime before an entry activates, so a
+listed runtime loads normally while an unlisted one fails loudly with an actionable
+message rather than half-working (the `0.1.7` line changed both the settings seam and
+the boot manifest, which is exactly what 1.4.0 migrated onto). On any other runtime,
+either install the plugin version that targets it (`1.3.3` for the pre-`0.1.7` line) or
+accept the risk explicitly and restart DSH:
+
+```bash
+dsh plugin allow-version     # exact-version exemption for name@version on this dsh
+```
+
+Two runtime notes for the supported versions:
+
+- **Settings page / hot-edit / legacy import** — the config fields are marked volatile,
+  which needs schemastery ≥ `3.18.4`. DSH resolves a plugin's own dependencies from the
+  profile first, so a profile still hoisting `3.18.2` gets no auto-generated settings
+  page, no hot-edit, and no migration of a legacy `~/.dsh/settings.yaml` section (that
+  section stays behind in `settings.yaml.imported`); the plugin still activates and reads
+  its config from the profile entry (see [Config reference](#config-reference)).
+- **Widget** — no manual bundling or index injection is involved: the host composes it
+  from the package's `dsh.client` declaration and serves it over `/plugins/...`
+  (see [How the sidebar widget loads](#how-the-sidebar-widget-loads)).
 
 ## Requirements
 
-- DSH installed and the `web` profile booted at least once (`~/.dsh/profiles/web` exists)
+- DSH `0.1.7-rc.1` or `0.1.7-rc.2` installed and the `web` profile booted at least once (`~/.dsh/profiles/web` exists)
 - Node.js ≥ 18 (for `fetch`)
 - An OpenCode GO subscription and its API key
 
 ## Install (official DSH flow)
 
-Requirements: DSH installed with the `web` profile booted once, Node.js ≥ 18,
-an OpenCode GO subscription.
+Requirements: DSH `0.1.7-rc.1` or `0.1.7-rc.2` installed with the `web` profile booted
+once, Node.js ≥ 18, an OpenCode GO subscription.
 
 ```bash
 # 1. install the package into your web profile (pnpm; enable via corepack if needed)
@@ -100,13 +137,29 @@ dsh plugin --profile web add /path/to/dsh-opencode-go-usage
 
 ## Config reference
 
-| key | default | description |
-|---|---|---|
+All fields are marked volatile, so they show up in Settings → Plugins → Plugin
+configuration and hot-apply without a restart:
+
 | key | default | description |
 |---|---|---|
 | `apiKeyEnv` | `OPENCODE_GO_API_KEY` | credential reference / env var name for the API key |
 | `baseUrl` | `https://opencode.ai/zen/go` | gateway base URL |
 | `cacheMs` | `30000` | host-side upstream cache TTL |
+| `updateCheck` | `true` | check npm for newer versions (widget + command show a hint; the plugin never self-upgrades) |
+| `injectSessionHeader` | `true` | inject the runtime `x-opencode-session` header for GO gateway chat calls |
+
+> The volatile marking is guarded: `.volatile()` exists from schemastery 3.18.4,
+> and DSH resolves a plugin's dependencies from the profile first. With an older
+> hoisted copy (3.18.2) the plugin still activates and reads its config from the
+> profile entry, but the auto-generated settings page and hot-edit stay off —
+> reinstall the plugin (or update `@deepseek-ai/schemastery` in the profile) to
+> get them. Either way the config can be set in the profile patch:
+
+```yaml
+- id: dsh-opencode-go-usage
+  config:
+    cacheMs: 60000
+```
 
 ## The usage API
 

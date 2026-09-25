@@ -1,7 +1,7 @@
 {
   "name": "@astervolans/dsh-opencode-go-usage",
-  "version": "1.3.3",
-  "description": "DSH (DeepSeek Harness) plugin: OpenCode GO plan quota widget in the sidebar, same-origin usage proxy, and a /opencode-go chat command",
+  "version": "1.4.0",
+  "description": "DSH (DeepSeek Harness) plugin: OpenCode GO plan quota widget in the sidebar, same-origin usage proxy, and a /opencode-go chat command (DSH 2.x compatible)",
   "type": "module",
   "main": "lib/index.js",
   "exports": {
@@ -27,7 +27,10 @@
     "node": ">=18"
   },
   "dependencies": {
-    "@deepseek-ai/schemastery": "^3.18.1"
+    "@deepseek-ai/schemastery": "^3.18.4"
+  },
+  "peerDependencies": {
+    "@deepseek-ai/dsh": "0.1.7-rc.1 || 0.1.7-rc.2"
   },
   "license": "MIT",
   "dsh": {
@@ -35,10 +38,7 @@
       "patch": "./cordis.patch.yml"
     },
     "client": {
-      "platform": "web",
-      "inject": [
-        "@deepseek-ai/dsh-client-runtime"
-      ]
+      "platform": "web"
     }
   },
   "repository": "github:Astervolans/dsh-opencode-go-usage",

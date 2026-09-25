@@ -4,9 +4,9 @@
 # package and, because package.json declares `dsh.bundle.patch`, reconciles it
 # into the profile's `dsh.profile.bundles` layer stack automatically — no manual
 # cordis.patch.yml editing. This file is that bundle layer: it inserts the
-# plugin entry with schema defaults; user overrides live in the settings
-# namespace (Web Settings → Plugins → Plugin configuration) or in
-# `~/.dsh/settings.yaml` under `dsh-opencode-go-usage`.
+# plugin entry with schema defaults; user overrides live in the entry's config
+# (Settings → Plugins → Plugin configuration; DSH 2.x reads the exported
+# `Config` schema by itself and volatile fields hot-apply).
 #
 # `name` MUST be the package's resolvable module specifier: the cordis loader
 # imports exactly this string from the profile directory, where only the scoped
