@@ -69,15 +69,18 @@ client-modules only.)
 The supported runtimes are declared in `peerDependencies`:
 
 ```json
-"peerDependencies": { "@deepseek-ai/dsh": "0.1.7-rc.1 || 0.1.7-rc.2" }
+"peerDependencies": {
+  "@deepseek-ai/schemastery": "^3.18.4",
+  "@deepseek-ai/dsh": "0.1.7-rc.1 || 0.1.7-rc.2"
+}
 ```
 
-DSH validates that range against the running runtime before an entry activates, so a
-listed runtime loads normally while an unlisted one fails loudly with an actionable
-message rather than half-working (the `0.1.7` line changed both the settings seam and
-the boot manifest, which is exactly what 1.4.0 migrated onto). On any other runtime,
-either install the plugin version that targets it (`1.3.3` for the pre-`0.1.7` line) or
-accept the risk explicitly and restart DSH:
+DSH validates the `@deepseek-ai/dsh` range against the running runtime before an entry
+activates, so a listed runtime loads normally while an unlisted one fails loudly with an
+actionable message rather than half-working (the `0.1.7` line changed both the settings
+seam and the boot manifest, which is exactly what 1.4.0 migrated onto). On any other
+runtime, either install the plugin version that targets it (`1.3.3` for the pre-`0.1.7`
+line) or accept the risk explicitly and restart DSH:
 
 ```bash
 dsh plugin allow-version     # exact-version exemption for name@version on this dsh
@@ -86,11 +89,12 @@ dsh plugin allow-version     # exact-version exemption for name@version on this 
 Two runtime notes for the supported versions:
 
 - **Settings page / hot-edit / legacy import** — the config fields are marked volatile,
-  which needs schemastery ≥ `3.18.4`. DSH resolves a plugin's own dependencies from the
-  profile first, so a profile still hoisting `3.18.2` gets no auto-generated settings
-  page, no hot-edit, and no migration of a legacy `~/.dsh/settings.yaml` section (that
-  section stays behind in `settings.yaml.imported`); the plugin still activates and reads
-  its config from the profile entry (see [Config reference](#config-reference)).
+  which needs schemastery ≥ `3.18.4`. Both official packages are declared as peers rather
+  than dependencies, so a fresh install resolves the copy DSH itself ships; a profile that
+  still hoists an older `3.18.2` gets no auto-generated settings page, no hot-edit, and no
+  migration of a legacy `~/.dsh/settings.yaml` section (that section stays behind in
+  `settings.yaml.imported`). Either way the plugin activates and reads its config from the
+  profile entry (see [Config reference](#config-reference)).
 - **Widget** — no manual bundling or index injection is involved: the host composes it
   from the package's `dsh.client` declaration and serves it over `/plugins/...`
   (see [How the sidebar widget loads](#how-the-sidebar-widget-loads)).

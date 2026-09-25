@@ -63,7 +63,10 @@ DSH `0.1.7-rc` 通过官方 client-modules 扫描来装载组件:包的 `dsh.cli
 支持的运行时写进了 `peerDependencies`:
 
 ```json
-"peerDependencies": { "@deepseek-ai/dsh": "0.1.7-rc.1 || 0.1.7-rc.2" }
+"peerDependencies": {
+  "@deepseek-ai/schemastery": "^3.18.4",
+  "@deepseek-ai/dsh": "0.1.7-rc.1 || 0.1.7-rc.2"
+}
 ```
 
 DSH 会在条目启用前用该范围校验当前运行时：**列出的版本正常加载,未列出的会明确报错**,
@@ -77,10 +80,10 @@ dsh plugin allow-version     # 为 name@version 在本 dsh 版本上授予精确
 
 在受支持版本上还有两点运行时说明:
 
-- **设置页 / 热改 / 旧配置迁移** —— 配置字段标记为 volatile,需要 schemastery ≥ `3.18.4`。DSH 解析插件
-  自身依赖时**优先用 profile 里的副本**,若 profile 仍是 `3.18.2`,则不会生成设置页、不能热改,旧的
-  `~/.dsh/settings.yaml` 段落也不会被迁移(会留在 `settings.yaml.imported`);插件照常启用,并从
-  profile 条目读取配置(见[配置项](#配置项))。
+- **设置页 / 热改 / 旧配置迁移** —— 配置字段标记为 volatile,需要 schemastery ≥ `3.18.4`。两个官方包都按
+  约定声明为 peer 而非 dependency,因此全新安装会解析到 DSH 自带的那份;若 profile 里仍 hoist 着旧的
+  `3.18.2`,则不会生成设置页、不能热改,旧的 `~/.dsh/settings.yaml` 段落也不会被迁移(会留在
+  `settings.yaml.imported`)。两种情况插件都照常启用,并从 profile 条目读取配置(见[配置项](#配置项))。
 - **小组件** —— 全程无需手工打包或注入 index:host 依据包的 `dsh.client` 声明装配组件,并从
   `/plugins/...` 组合路由提供(见[侧边栏小组件如何加载](#侧边栏小组件如何加载))。
 
