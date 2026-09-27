@@ -77,6 +77,30 @@ curl -s https://registry.npmjs.org/@astervolans%2Fdsh-opencode-go-usage/latest |
   改了目录结构要同步；
 - `npm pack --dry-run` 看清单（当前 8 个文件 / 约 21 kB）。
 
+## GitHub Packages（自动，无需 token）
+
+每个 Release 也会自动发布到 GitHub Packages，由
+[`.github/workflows/release-package.yml`](../.github/workflows/release-package.yml)
+完成：`release: created` 触发（另加 `workflow_dispatch` 便于手动重跑），用工作流自带的
+`GITHUB_TOKEN`（`packages: write`）发布。**不需要任何 secret**，也不受上游
+trusted publisher 按仓库绑定的限制 —— 这是 npmjs 手动发布之外的另一条自动路径。
+
+- **手动重跑**：Actions → Node.js Package → Run workflow。已发布过的版本会被跳过
+  （先 `npm view` 查一次，命中就直接 exit 0），不会报红。
+- **registry 只在 CI 里映射**：setup-node 按仓库 owner 推导出
+  `@astervolans:registry=https://npm.pkg.github.com/`，默认 registry 仍是 npmjs.org。
+  仓库里**刻意不放** `.npmrc` —— 那会把这个 scope 的 `npm publish` 也劫持到
+  GitHub Packages，破坏下面这套本地 npmjs 发布流程。
+- **首次发布后要手动改可见性**：包默认 private，改 public 的位置是
+  `https://github.com/users/Astervolans/packages/npm/dsh-opencode-go-usage/settings`
+  → Danger Zone → Change visibility。
+- GitHub Packages 即使对公开包也**要求认证**（PAT + `read:packages`），所以它更适合
+  当镜像/备份，普通用户仍建议走 npmjs.org。
+- **可选**：把 npmjs 发布也搬进 CI —— 在 npmjs 上给本包配置 trusted publisher
+  （仓库 `Astervolans/dsh-opencode-go-usage`，工作流文件 `release-package.yml`），
+  再把仓库变量 `NPMJS_TRUSTED_PUBLISHING` 设为 `true`；那之后 `publish-npmjs`
+  作业才会参与发布（默认跳过，不会让 Release 变红）。
+
 ## 为什么不用 NPM_TOKEN
 
 - npm 已于 2025-11-19 **永久吊销全部 classic token**，生成入口同时关闭 ——

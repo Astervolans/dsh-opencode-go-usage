@@ -1,0 +1,201 @@
+name: Node.js Package
+
+# Publishes @astervolans/dsh-opencode-go-usage to GitHub Packages when a release
+# is created, following the GitHub Packages quickstart (build -> publish-gpr).
+#
+# Why this exists next to `npm-publish.yml`: that workflow is inherited from
+# upstream and is guarded `if: github.repository == 'yumusb/...'`, i.e. an
+# explicit no-op in this fork, because npm Trusted Publishing (OIDC) is bound to
+# the upstream repository and a fork is not in the trusted-publisher allow-list.
+# GitHub Packages has no such binding: `GITHUB_TOKEN` with `packages: write`
+# can publish into this repository owner's namespace, so this path needs no
+# secret, no OIDC allow-list and no manual `npm publish`.
+#
+# `workflow_dispatch` is added so the pipeline can be exercised by hand; the
+# publish step is idempotent, so re-running an already-published version is a
+# no-op rather than a red run.
+
+on:
+  release:
+    types: [created]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-package-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Test
+    # The package ships no build step and has no `prepublishOnly` hook, so this
+    # job reproduces the gates `scripts/publish.sh` enforces by hand: the
+    # update-check constant must match the package name, every shipped module
+    # must parse, and the tarball must contain exactly what `files` promises.
+    # None of it needs `npm ci`.
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v6
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: '24.x'
+
+      - name: Release tag must match package.json
+        if: github.event_name == 'release'
+        run: |
+          set -euo pipefail
+          TAG="${GITHUB_REF_NAME#v}"
+          PKG="$(node -p "require('./package.json').version")"
+          if [ "$TAG" != "$PKG" ]; then
+            echo "::error::release tag v$TAG does not match package.json version $PKG"
+            exit 1
+          fi
+          echo "Releasing $PKG"
+
+      - name: NPM_PACKAGE must match package.json
+        # The runtime asks registry.npmjs.org for the latest version of this
+        # constant, so a rename that forgets it would silently never find an
+        # update again.
+        run: |
+          set -euo pipefail
+          PKG="$(node -p "require('./package.json').name")"
+          if ! grep -q "const NPM_PACKAGE = \"$PKG\";" lib/index.js; then
+            echo "::error::lib/index.js NPM_PACKAGE does not match package.json name ($PKG)"
+            grep -n 'NPM_PACKAGE' lib/index.js >&2
+            exit 1
+          fi
+          echo "NPM_PACKAGE matches: $PKG"
+
+      - name: Syntax-check every shipped module
+        run: |
+          set -euo pipefail
+          for f in lib/index.js lib/client.js lib/opencode-session.js; do
+            node --check "$f"
+            echo "ok $f"
+          done
+
+      - name: Verify the published file list
+        run: |
+          set -euo pipefail
+          npm pack --dry-run --json > pack.json
+          node -e "
+            // npm <= 11 emits an array; npm >= 12 emits an object keyed by
+            // package name. Accept both so a runner npm upgrade cannot turn
+            // this gate into a TypeError.
+            const data = require('./pack.json');
+            const report = Array.isArray(data) ? data[0] : Object.values(data)[0];
+            const files = report.files.map((f) => f.path);
+            const required = [
+              'package.json',
+              'cordis.patch.yml',
+              'lib/index.js',
+              'lib/client.js',
+              'lib/opencode-session.js',
+              'README.md'
+            ];
+            const missing = required.filter((f) => !files.includes(f));
+            const leaked = files.filter((f) =>
+              f.startsWith('node_modules/') ||
+              f.startsWith('scripts/') ||
+              f.startsWith('docs/') ||
+              f.startsWith('.github/'));
+            if (missing.length) { console.error('missing from the package:', missing); process.exit(1); }
+            if (leaked.length) { console.error('should not be packaged:', leaked); process.exit(1); }
+            console.log('package looks good:', files.length, 'files,', report.size, 'bytes');
+          "
+
+  publish-gpr:
+    name: Publish to GitHub Packages
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      # Required to publish a package associated with this repository.
+      packages: write
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v6
+
+      - name: Set up Node.js and authenticate the @astervolans scope
+        # Pointing `registry-url` at GitHub Packages makes setup-node write
+        #
+        #   @astervolans:registry=https://npm.pkg.github.com/
+        #   //npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}
+        #
+        # into $RUNNER_TEMP/.npmrc and export NPM_CONFIG_USERCONFIG for the
+        # following steps. The scope is inferred from the repository owner
+        # (`Astervolans` -> `@astervolans`) and lowercased, so no `scope` input
+        # is needed. Only the scope is remapped — the default registry stays
+        # npmjs.org, so a committed routing `.npmrc` is unnecessary and would
+        # hijack `npm publish` to npmjs.org for this same scope.
+        uses: actions/setup-node@v7
+        with:
+          node-version: '24.x'
+          registry-url: https://npm.pkg.github.com/
+
+      - name: Publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          PKG="$(node -p "require('./package.json').name")"
+          VER="$(node -p "require('./package.json').version")"
+
+          # GitHub Packages requires auth even to read, so the lookup below runs
+          # with the same token. Distinguish "not published yet" (404 -> go on)
+          # from a real registry problem (anything else -> fail loudly).
+          if LOOKUP="$(npm view "$PKG@$VER" version 2>&1)"; then
+            echo "::notice::$PKG@$VER is already on GitHub Packages - nothing to publish."
+            exit 0
+          fi
+          case "$LOOKUP" in
+            *E404*|*404*|*"Not Found"*) ;;
+            *) echo "$LOOKUP" >&2; exit 1 ;;
+          esac
+
+          npm publish
+          echo "::notice::published $PKG@$VER to GitHub Packages"
+          echo "https://github.com/Astervolans/dsh-opencode-go-usage/pkgs/npm/dsh-opencode-go-usage"
+
+  publish-npmjs:
+    name: Publish to npmjs.org
+    needs: build
+    # Opt-in, skipped by default so a release never goes red over an npm-side
+    # setting this workflow cannot configure itself. This is the path that
+    # `docs/RELEASE.md` currently documents as a manual `npm publish`.
+    #
+    # To enable: configure a trusted publisher at
+    #   https://www.npmjs.com/package/@astervolans/dsh-opencode-go-usage
+    #   -> Settings -> Trusted Publisher
+    # with "GitHub Actions" and
+    #   Organization or user: Astervolans
+    #   Repository:           dsh-opencode-go-usage
+    #   Workflow filename:    release-package.yml
+    # then set the repository variable NPMJS_TRUSTED_PUBLISHING=true
+    # (Settings -> Secrets and variables -> Actions -> Variables).
+    if: vars.NPMJS_TRUSTED_PUBLISHING == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v6
+
+      - name: Set up Node.js
+        # Trusted publishing needs npm >= 11.5.1; Node 24 ships it.
+        uses: actions/setup-node@v7
+        with:
+          node-version: '24.x'
+          registry-url: https://registry.npmjs.org
+
+      - name: Publish
+        # No NODE_AUTH_TOKEN on purpose: npm exchanges the OIDC id-token for
+        # short-lived credentials and attaches a provenance attestation.
+        # `access: public` comes from `publishConfig` in package.json.
+        run: npm publish --provenance

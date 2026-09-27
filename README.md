@@ -126,7 +126,33 @@ That's it for the quota widget and `/opencode-go` command. The CLI reconciles
 the package's `dsh.bundle.patch` into the profile's bundle stack automatically
 — no manual `cordis.patch.yml` editing, no symlinks.
 
-Not published on npm yet? Install from a checkout instead:
+### From GitHub Packages
+
+Every release also publishes to GitHub Packages
+(`https://npm.pkg.github.com`), automatically, from the release workflow. That
+registry requires authentication **even for public packages**, so add an `.npmrc`
+— project-level, or `~/.npmrc` — with a personal access token that has at least
+`read:packages`:
+
+```
+@astervolans:registry=https://npm.pkg.github.com
+//npm.pkg.github.com/:_authToken=YOUR_GITHUB_PAT
+```
+
+```bash
+dsh plugin --profile web add @astervolans/dsh-opencode-go-usage
+```
+
+Two things to know before choosing this route:
+
+- The package is **private by default** on GitHub, even though the repository is
+  public. The first release has to be flipped to public once, at
+  [package settings](https://github.com/users/Astervolans/packages/npm/dsh-opencode-go-usage/settings)
+  → Danger Zone → Change visibility.
+- Because installation needs a token, npmjs.org (no token, no scope line) stays
+  the friendlier path. GitHub Packages is a mirror, not a replacement.
+
+### From a checkout
 
 ```bash
 dsh plugin --profile web add /path/to/dsh-opencode-go-usage

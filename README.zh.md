@@ -119,6 +119,29 @@ cordis.patch.yml,不需要软链**。
 dsh plugin --profile web add /path/to/dsh-opencode-go-usage
 ```
 
+### 从 GitHub Packages 安装
+
+每次发布也会自动同步到 GitHub Packages(`https://npm.pkg.github.com`),由 release
+工作流完成。该注册表**即使对公开包也要求认证**,请先准备一个至少有 `read:packages`
+权限的 PAT,写进 `.npmrc`(项目级或 `~/.npmrc`):
+
+```
+@astervolans:registry=https://npm.pkg.github.com
+//npm.pkg.github.com/:_authToken=你的_GITHUB_PAT
+```
+
+```bash
+dsh plugin --profile web add @astervolans/dsh-opencode-go-usage
+```
+
+选择这条路之前先了解两点:
+
+- 包在 GitHub 上**默认是 private**(仓库公开也一样),首次发布后需要手动改成 public:
+  [包设置](https://github.com/users/Astervolans/packages/npm/dsh-opencode-go-usage/settings)
+  → Danger Zone → Change visibility。
+- 安装需要 token,所以 npmjs.org(不需要 token、不需要 scope 行)仍是更省事的路。
+  GitHub Packages 是镜像,不是替代。
+
 > 第一次装 DSH 插件?直接看[使用者指南](docs/INSTALL.zh.md),一步步照着做就行。
 
 ## 使用
