@@ -14,9 +14,10 @@ English | [中文](README.zh.md)
 
 A [DSH](https://github.com/deepseek-ai/deepseek-harness) (DeepSeek Harness) plugin that watches your **OpenCode GO plan** quota — the $10/month subscription that gives you usage limits on open-source models (rolling 5-hour, weekly, and monthly windows).
 
-Compatible with DSH `0.1.7-rc.1` and `0.1.7-rc.2` — declared in `peerDependencies`, so
-DSH enforces it. See [Compatibility](#compatibility) for the version matrix, what
-changed in 1.4.0, and what to do on any other runtime.
+Compatible with DSH `0.1.7` and above, including the `0.2.0` line — declared in
+`peerDependencies` as `>=0.1.7-rc.1 <0.3.0`, so DSH enforces it. See
+[Compatibility](#compatibility) for the version matrix, what changed in 1.5.0, and what
+to do on any other runtime.
 
 ## Features
 
@@ -63,7 +64,8 @@ client-modules only.)
 
 | plugin | DSH runtime | host half | browser half |
 |---|---|---|---|
-| **1.4.0** (current) | `0.1.7-rc.1`, `0.1.7-rc.2` | `Config` schema read by the loader; config taken from the plugin entry (no `ctx.settings.register`/`settings.get`) | composed by `client-modules` from the package's `dsh.client` declaration |
+| **1.5.0** (current) | `0.1.7` and above, including the `0.2.0` line | `Config` schema read by the loader; config taken from the plugin entry (no `ctx.settings.register`/`settings.get`) | composed by `client-modules` from the package's `dsh.client` declaration |
+| 1.4.0 | `0.1.7-rc.1`, `0.1.7-rc.2` | same as 1.5.0 | same as 1.5.0 |
 | 1.3.3 | `0.1.1-rc.2`, `0.1.2-alpha.2` (the pre-`0.1.7` line) | `ctx.settings.register` namespace + `ctx.settings.get` reads | self-hosted bundle route + `webServer.tapIndex` boot-graph row |
 
 The supported runtimes are declared in `peerDependencies`:
@@ -71,16 +73,19 @@ The supported runtimes are declared in `peerDependencies`:
 ```json
 "peerDependencies": {
   "@deepseek-ai/schemastery": "^3.18.4",
-  "@deepseek-ai/dsh": "0.1.7-rc.1 || 0.1.7-rc.2"
+  "@deepseek-ai/dsh": ">=0.1.7-rc.1 <0.3.0"
 }
 ```
 
 DSH validates the `@deepseek-ai/dsh` range against the running runtime before an entry
-activates, so a listed runtime loads normally while an unlisted one fails loudly with an
-actionable message rather than half-working (the `0.1.7` line changed both the settings
-seam and the boot manifest, which is exactly what 1.4.0 migrated onto). On any other
-runtime, either install the plugin version that targets it (`1.3.3` for the pre-`0.1.7`
-line) or accept the risk explicitly and restart DSH:
+activates. From `0.2.0` on that validation is a hard gate: every `@deepseek-ai/dsh` /
+`@deepseek-ai/dsh-*` peer is tested with `includePrerelease`, and a mismatch disables the
+whole profile row (the host logs `disabling profile plugin row …`) rather than
+half-working. The `>=0.1.7-rc.1 <0.3.0` window therefore spans the `0.1.7` line and the
+whole `0.2.0` line; the 1.4.0 value `0.1.7-rc.1 || 0.1.7-rc.2` cannot, because any
+`0.1.x` range stops at `<0.2.0`. On an unlisted runtime, either install the plugin version
+that targets it (`1.3.3` for the pre-`0.1.7` line) or accept the risk explicitly and
+restart DSH:
 
 ```bash
 dsh plugin allow-version     # exact-version exemption for name@version on this dsh
@@ -101,14 +106,14 @@ Two runtime notes for the supported versions:
 
 ## Requirements
 
-- DSH `0.1.7-rc.1` or `0.1.7-rc.2` installed and the `web` profile booted at least once (`~/.dsh/profiles/web` exists)
+- DSH `0.1.7` or newer, including the `0.2.0` line, installed and the `web` profile booted at least once (`~/.dsh/profiles/web` exists)
 - Node.js ≥ 18 (for `fetch`)
 - An OpenCode GO subscription and its API key
 
 ## Install (official DSH flow)
 
-Requirements: DSH `0.1.7-rc.1` or `0.1.7-rc.2` installed with the `web` profile booted
-once, Node.js ≥ 18, an OpenCode GO subscription.
+Requirements: DSH `0.1.7` or newer, including the `0.2.0` line, installed with the `web`
+profile booted once, Node.js ≥ 18, an OpenCode GO subscription.
 
 ```bash
 # 1. install the package into your web profile (pnpm; enable via corepack if needed)

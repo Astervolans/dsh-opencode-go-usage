@@ -12,8 +12,8 @@
 
 [DSH](https://github.com/deepseek-ai/deepseek-harness)(DeepSeek Harness)插件:监控你的 **OpenCode GO 套餐**额度 —— 10 美元/月的订阅,按模型提供滚动 5 小时 / 每周 / 每月三个窗口的用量限额。
 
-兼容 DSH `0.1.7-rc.1` 与 `0.1.7-rc.2` —— 已写入 `peerDependencies`,由 DSH 校验。
-版本矩阵、1.4.0 的改动,以及其他运行时怎么办,见[兼容性](#兼容性)。
+兼容 DSH `0.1.7` 及以上(含 `0.2.0` 线) —— 已写入 `peerDependencies`(`>=0.1.7-rc.1 <0.3.0`),
+由 DSH 校验。版本矩阵、1.5.0 的改动,以及其他运行时怎么办,见[兼容性](#兼容性)。
 
 ## 功能
 
@@ -57,7 +57,8 @@ DSH `0.1.7-rc` 通过官方 client-modules 扫描来装载组件:包的 `dsh.cli
 
 | 插件版本 | DSH 运行时 | host 端 | 浏览器端 |
 |---|---|---|---|
-| **1.4.0**(当前) | `0.1.7-rc.1`、`0.1.7-rc.2` | 由 loader 读取导出的 `Config` schema;配置取自插件条目(不再调用 `ctx.settings.register`/`settings.get`) | 由 `client-modules` 依据包的 `dsh.client` 声明自动装配 |
+| **1.5.0**(当前) | `0.1.7` 及以上,含 `0.2.0` 线 | 由 loader 读取导出的 `Config` schema;配置取自插件条目(不再调用 `ctx.settings.register`/`settings.get`) | 由 `client-modules` 依据包的 `dsh.client` 声明自动装配 |
+| 1.4.0 | `0.1.7-rc.1`、`0.1.7-rc.2` | 同 1.5.0 | 同 1.5.0 |
 | 1.3.3 | `0.1.1-rc.2`、`0.1.2-alpha.2`(即 `0.1.7` 之前的版本线) | `ctx.settings.register` 注册命名空间 + `ctx.settings.get` 读取 | 自托管 bundle 路由 + `webServer.tapIndex` 注入启动图行 |
 
 支持的运行时写进了 `peerDependencies`:
@@ -65,14 +66,16 @@ DSH `0.1.7-rc` 通过官方 client-modules 扫描来装载组件:包的 `dsh.cli
 ```json
 "peerDependencies": {
   "@deepseek-ai/schemastery": "^3.18.4",
-  "@deepseek-ai/dsh": "0.1.7-rc.1 || 0.1.7-rc.2"
+  "@deepseek-ai/dsh": ">=0.1.7-rc.1 <0.3.0"
 }
 ```
 
-DSH 会在条目启用前用该范围校验当前运行时：**列出的版本正常加载,未列出的会明确报错**,
-而不是半死不活地跑着(`0.1.7` 这条线同时改掉了 settings 接缝与启动清单,1.4.0 正是为迁移
-到它而做的)。若运行时不在此列,请改装对应版本的插件(`0.1.7` 之前用 `1.3.3`),或显式接受
-风险后重启 DSH:
+DSH 会在条目启用前用该范围校验当前运行时。从 `0.2.0` 起这是**硬闸门**:所有
+`@deepseek-ai/dsh` / `@deepseek-ai/dsh-*` peer 都会带 `includePrerelease` 参与判定,
+不匹配则**整行被禁用**(宿主日志会写 `disabling profile plugin row …`),而不是半死不活
+地跑着。因此窗口写成 `>=0.1.7-rc.1 <0.3.0`,同时覆盖 `0.1.7` 线与整条 `0.2.0` 线;
+1.4.0 的写法 `0.1.7-rc.1 || 0.1.7-rc.2` 做不到 —— 任何 `0.1.x` 范围的上界都是 `<0.2.0`。
+若运行时不在此列,请改装对应版本的插件(`0.1.7` 之前用 `1.3.3`),或显式接受风险后重启 DSH:
 
 ```bash
 dsh plugin allow-version     # 为 name@version 在本 dsh 版本上授予精确版本豁免
@@ -89,13 +92,13 @@ dsh plugin allow-version     # 为 name@version 在本 dsh 版本上授予精确
 
 ## 环境要求
 
-- 已安装 DSH `0.1.7-rc.1` 或 `0.1.7-rc.2`,且 `web` profile 至少启动过一次(`~/.dsh/profiles/web` 存在)
+- 已安装 DSH `0.1.7` 及以上(含 `0.2.0` 线),且 `web` profile 至少启动过一次(`~/.dsh/profiles/web` 存在)
 - Node.js ≥ 18(需要 `fetch`)
 - OpenCode GO 订阅及其 API key
 
 ## 安装(官方 DSH 流程)
 
-前置:已装 DSH `0.1.7-rc.1` 或 `0.1.7-rc.2`,且 `web` profile 至少启动过一次;Node.js ≥ 18;有 OpenCode GO 订阅。
+前置:已装 DSH `0.1.7` 及以上(含 `0.2.0` 线),且 `web` profile 至少启动过一次;Node.js ≥ 18;有 OpenCode GO 订阅。
 
 ```bash
 # 1. 安装到 web profile(依赖 pnpm,没有的话先 corepack enable)
