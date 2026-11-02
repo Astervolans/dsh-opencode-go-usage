@@ -1,7 +1,7 @@
 {
   "name": "@astervolans/dsh-opencode-go-usage",
-  "version": "1.5.0",
-  "description": "DSH (DeepSeek Harness) plugin: OpenCode GO plan quota widget in the sidebar, same-origin usage proxy, and a /opencode-go chat command (DSH 0.1.7+ and 0.2.0 compatible)",
+  "version": "1.6.0",
+  "description": "DSH (DeepSeek Harness) plugin: OpenCode GO plan quota widget in the sidebar, dsh-opencode-go current-account quota source with built-in-provider fallback, a Plugins-panel settings page, a same-origin usage proxy, and a /opencode-go chat command (DSH 0.1.7+ and 0.2.0 compatible)",
   "type": "module",
   "main": "lib/index.js",
   "exports": {
@@ -13,6 +13,9 @@
     "lib",
     "cordis.patch.yml"
   ],
+  "scripts": {
+    "test": "node test/run.mjs"
+  },
   "keywords": [
     "dsh",
     "deepseek-harness",
