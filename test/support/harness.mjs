@@ -147,18 +147,27 @@ export function makeCtx(options = {}) {
 	const commands = [];
 	const listeners = [];
 	const effects = [];
+	const warns = [];
+	const exact = new Map();
+	const prefixes = new Map();
+	const commandMap = new Map();
 	const services = { ...(options.services ?? {}) };
 	const entries = options.entries ?? [];
 	const ctx = {
 		webServer: {
 			port: options.port,
 			host: options.host ?? "127.0.0.1",
+			exact,
+			prefixes,
 			register(route) {
-				if (routes.some((candidate) => candidate.kind === route.kind && candidate.path === route.path)) {
+				const table = route.kind === "exact" ? exact : prefixes;
+				if (table.has(route.path)) {
 					throw new Error(`webserver: duplicate ${route.kind} route "${route.path}"`);
 				}
+				table.set(route.path, route);
 				routes.push(route);
 				return () => {
+					if (table.get(route.path) === route) table.delete(route.path);
 					const index = routes.indexOf(route);
 					if (index !== -1) routes.splice(index, 1);
 				};
@@ -166,11 +175,24 @@ export function makeCtx(options = {}) {
 		},
 		commands: {
 			register(command) {
+				if (commandMap.has(command.name)) {
+					throw new Error(`command "${command.name}" is already registered in this scope`);
+				}
+				commandMap.set(command.name, command);
 				commands.push(command);
-				return () => {};
+				return () => {
+					if (commandMap.get(command.name) === command) commandMap.delete(command.name);
+					const index = commands.indexOf(command);
+					if (index !== -1) commands.splice(index, 1);
+				};
 			}
 		},
 		credentials: credentials(options.credentialMap),
+		logger: {
+			warn(message) {
+				warns.push(String(message));
+			}
+		},
 		effect(fn) {
 			const dispose = fn();
 			effects.push(dispose);
@@ -187,7 +209,7 @@ export function makeCtx(options = {}) {
 		fiber: { entry: { options: { id: options.entryId ?? "dsh-opencode-go-usage" } } },
 		root: {}
 	};
-	return { ctx, routes, commands, listeners, services, entries, effects };
+	return { ctx, routes, commands, listeners, services, entries, effects, warns, exact, prefixes, commandMap };
 }
 
 /** Read-only response stub compatible with the plugin's `res.end()` usage. */
