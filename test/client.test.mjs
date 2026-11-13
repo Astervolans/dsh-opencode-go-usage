@@ -133,3 +133,54 @@ test("host and client agree on the quotaSource values", () => {
 	assert.ok(text.includes("/opencode-go/settings"), "client calls the settings route");
 	assert.ok(text.includes("plugins.bundle.config"), "client uses the official config slot");
 });
+
+test("usage polling retries transport failures but not HTTP answers", async () => {
+	const exports = captured.factory((specifier) => {
+		if (specifier === "react") return react;
+		if (specifier === "react/jsx-runtime") return jsxRuntime;
+		throw new Error(specifier);
+	});
+	const poll = exports.fetchUsageWithRetry;
+	assert.equal(typeof poll, "function", "poll helper is exported for tests");
+
+	// A local transport blip ("fetch failed", a reset keep-alive connection) is
+	// retried and the next successful payload wins.
+	let calls = 0;
+	const waits = [];
+	const recovered = await poll({
+		request: async () => {
+			calls += 1;
+			if (calls < 3) throw new Error("fetch failed");
+			return { ok: true, status: 200, json: async () => ({ usage: { monthly: { percent: 35 } } }) };
+		},
+		wait: async (ms) => { waits.push(ms); }
+	});
+	assert.equal(recovered.outcome, "ok");
+	assert.equal(recovered.data.usage.monthly.percent, 35);
+	assert.equal(calls, 3, "two transport failures were retried");
+	assert.deepEqual(waits, [800, 2500], "retries use the documented backoff");
+
+	// Once every retry failed the outcome is a network error, so the widget can
+	// keep the last good payload instead of blanking.
+	calls = 0;
+	const failed = await poll({
+		request: async () => { calls += 1; throw new Error("fetch failed"); },
+		wait: async () => {}
+	});
+	assert.equal(failed.outcome, "network");
+	assert.equal(failed.message, "fetch failed");
+	assert.equal(calls, 3, "one attempt plus two retries");
+
+	// HTTP answers are meaningful and must not be retried.
+	calls = 0;
+	const http = await poll({
+		request: async () => {
+			calls += 1;
+			return { ok: false, status: 502, json: async () => ({ error: "gateway 502: upstream unavailable" }) };
+		},
+		wait: async () => {}
+	});
+	assert.equal(http.outcome, "http");
+	assert.equal(http.message, "gateway 502: upstream unavailable");
+	assert.equal(calls, 1, "HTTP failures are surfaced without retry");
+});
